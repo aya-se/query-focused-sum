@@ -40,7 +40,7 @@ from statistics import mean
 from typing import Optional
 
 import datasets
-import nltk  # Here to have a nice missing dependency error message early on
+import nltk  # Here to have a nice missing dependency error message early on # 形態素解析など
 import numpy as np
 import transformers
 from datasets import load_dataset, load_metric
@@ -59,8 +59,8 @@ from transformers.file_utils import is_offline_mode
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils.versions import require_version
 
-from dataset import MultiEncoderDataset
-from models import BartForMultiConditionalGeneration
+from dataset import MultiEncoderDataset # dataset.pyより
+from models import BartForMultiConditionalGeneration # models.pyより
 
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
 # check_min_version("4.12.0.dev0")
@@ -77,9 +77,9 @@ except (LookupError, OSError):
             "Offline mode: run this script without TRANSFORMERS_OFFLINE first to download nltk data files"
         )
     with FileLock(".lock") as lock:
-        nltk.download("punkt", quiet=True)
+        nltk.download("punkt", quiet=True) # nltkの形態素解析ツール読み込み
 
-
+# bashファイルで指定しているオプション群の詳細
 @dataclass
 class ModelArguments:
     """
@@ -131,12 +131,14 @@ class ModelArguments:
         default=None,
         metadata={"help": "Currently only 'bart' is supported"},
     )
+    # ウィンドウの最大チャンク数 ()
     multiencoder_max_num_chunks: Optional[int] = field(
         default=None,
         metadata={
             "help": "Max passages/encoders to use in multiencoder"
         },
     )
+    # ウィンドウをoverlapさせるかどうか？
     multiencoder_stride: bool = field(
         default=False,
         metadata={
@@ -144,7 +146,7 @@ class ModelArguments:
         },
     )
 
-
+# bashファイルで指定しているオプション群の詳細
 @dataclass
 class DataTrainingArguments:
     """
@@ -188,6 +190,7 @@ class DataTrainingArguments:
         default=None,
         metadata={"help": "The number of processes to use for the preprocessing."},
     )
+    # 入力の最大長
     max_source_length: Optional[int] = field(
         default=1024,
         metadata={
@@ -300,7 +303,8 @@ def main():
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
     print("got here")
-    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments))
+    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments)) #Huggingfaceのパーサー
+    # パースされた引数を格納
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.
@@ -356,7 +360,7 @@ def main():
             )
 
     # Set seed before initializing model.
-    set_seed(training_args.seed)
+    set_seed(training_args.seed) #transformerライブラリ
 
     config = AutoConfig.from_pretrained(
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
@@ -380,13 +384,13 @@ def main():
 
     if model_args.multiencoder_type is not None:
         if model_args.multiencoder_type == 'bart':
-            model_class = BartForMultiConditionalGeneration
+            model_class = BartForMultiConditionalGeneration # BARTベースのモデルクラスを指定
         else:
             raise ValueError(f"Invalid multiencoder_type: {model_args.multiencoder_type}")
     else:
         model_class = AutoModelForSeq2SeqLM
     model = model_class.from_pretrained(
-        model_args.model_name_or_path,
+        model_args.model_name_or_path, # facebook/bart-largeが指定されている
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
         config=config,
         cache_dir=model_args.cache_dir,
@@ -440,13 +444,15 @@ def main():
                 with open(data_args.train_file, 'rb') as f:
                     train_dataset = pickle.load(f)
             else:
+                # 合計入力長 = max_source_length * multiencoder_max_num_chunks
+                # dataset.pyの引数に渡す
                 train_dataset = MultiEncoderDataset(
                     data_path=data_args.train_file,
                     tokenizer=tokenizer,
-                    chunk_size=data_args.max_source_length,
-                    max_num_chunks=model_args.multiencoder_max_num_chunks,
+                    chunk_size=data_args.max_source_length, # ウィンドウの入力長の上限設定
+                    max_num_chunks=model_args.multiencoder_max_num_chunks, # ウィンドウの最大チャンク数指定
                     max_target_length=data_args.max_target_length,
-                    stride=model_args.multiencoder_stride,
+                    stride=model_args.multiencoder_stride, #ウィンドウをoverlapさせるかの設定
                     num_samples=data_args.max_train_samples,
                     ignore_pad_token_for_loss=data_args.ignore_pad_token_for_loss,
                 )

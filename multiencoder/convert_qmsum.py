@@ -5,7 +5,7 @@
  * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
 
-import argparse
+import argparse # Python標準のargparseライブラリ
 import json
 from pathlib import Path
 
@@ -14,8 +14,8 @@ import tqdm
 
 def main():
     parser = argparse.ArgumentParser('preprocess')
-    parser.add_argument("--input_dir", type=str, help="inp directory", default="../data/")
-    parser.add_argument("--output_dir", type=str, help="out directory", default="data/qmsum/preprocessed")
+    parser.add_argument("--input_dir", type=str, help="inp directory", default="../data/") # 変換元
+    parser.add_argument("--output_dir", type=str, help="out directory", default="data/qmsum/preprocessed") # 変換先
     args = parser.parse_args()
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     for split in ["test", "val", "train"]:
@@ -40,12 +40,14 @@ def main():
                 source = meeting_lookup[meeting_id]
                 query = data['query']
                 target = data['answer']
+                # 1つのクエリ・参照要約に対して1つずつ対話スクリプトをコピー
+                # 1つ1つのjsonが1個のモデルに対する入力となるように加工
                 out.write(
                     json.dumps(
                         {
-                            'source': source,
-                            'query': query,
-                            'target': target
+                            'source': source, # 対話スクリプトをフォーマット変換して格納
+                            'query': query, # クエリ
+                            'target': target # 参照要約
                         }
                     ) + '\n'
                 )

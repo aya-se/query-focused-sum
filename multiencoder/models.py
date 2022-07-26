@@ -29,22 +29,26 @@ class BartForMultiConditionalGeneration(BartForConditionalGeneration):
             )
         input_ids = input_ids.contiguous().view(B * N, L)
         attention_mask = attention_mask.contiguous().view(B * N, L)
+        # (たぶん)1つ1つのEncoderのoutputのリストを受け取っている
         encoder_outputs = self.model.encoder(
             input_ids=input_ids,
             attention_mask=attention_mask,
             return_dict=return_dict
         )
+        # (たぶん)1つ1つのEncoderのoutputのうち、最後の隠れ状態だけを抽出している
         if return_dict:
             hidden_states = encoder_outputs.last_hidden_state
         else:
             hidden_states = encoder_outputs[0]
         # hidden_states: (B * N, L, D)
         D = hidden_states.size(2)
+        # (たぶん) 1つ1つのEncoderのoutputの最終隠れ状態を全て連結している
         stacked_source_reps = hidden_states.contiguous().view(B, N * L, D)
         if return_dict:
             encoder_outputs = BaseModelOutput(last_hidden_state=stacked_source_reps)
         else:
             encoder_outputs = (stacked_source_reps,)
+        # Attention Maskについても同様
         stacked_source_mask = attention_mask.contiguous().view(B, N * L)
         return encoder_outputs, stacked_source_mask
 
@@ -55,11 +59,13 @@ class BartForMultiConditionalGeneration(BartForConditionalGeneration):
         attention_mask=None,
         **kwargs,
     ):
+        # 全てのEncoderのoutoutの連結を受け取る
         encoder_outputs, attention_mask = self.multi_encode(
             input_ids=input_ids,
             attention_mask=attention_mask,
             return_dict=True
         )
+        # (たぶん)連結したEncoderの出力をDecoderの入力として渡して、自己回帰的に要約文を生成している
         return super().generate(
             input_ids=None,
             attention_mask=attention_mask,
