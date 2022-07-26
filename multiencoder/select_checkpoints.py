@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
-
+# チェックポイントのうち、最も良い性能のものを/selected_checkpointにコピーする
 # Identifies best checkpoint and copies to selected_checkpoint directory
 
 import argparse

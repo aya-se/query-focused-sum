@@ -109,7 +109,7 @@ class MultiEncoderDataset(Dataset):
             'decoder_attention_mask': tokenized_answer['attention_mask'].squeeze(),
         }
 
-
+# セグメントに分割する部分
 class ChunkTokenizer:
     """Chunks and tokenizes input text and optional query for input to multi-encoder model. Does both chunking and
     tokenizing because the chunking is based on tokenized text."""
@@ -136,7 +136,7 @@ class ChunkTokenizer:
         self.chunk_size = chunk_size
         self.max_num_chunks = max_num_chunks
         self.stride = stride
-        self.pad = pad
+        self.pad = pad # デフォルトでTrue
 
     def __call__(
         self,
@@ -151,40 +151,41 @@ class ChunkTokenizer:
             dictionary with tokenized chunks
         """
         if query:
-            prefix = f"<s>{query}</s>"
+            prefix = f"<s>{query}</s>" # queryだったら前後にトークンを挟んだqueryを接頭辞に指定
         else:
-            prefix = f"<s>"
+            prefix = f"<s>" # queryがなかったらトークンを接頭辞に指定
         prefix_tokens = self.tokenizer(
             prefix,
             add_special_tokens=False,
             return_tensors="pt",
-            max_length=self.chunk_size,
+            max_length=self.chunk_size, # 例えば512など
             truncation=True
         )['input_ids']
         prefix_len = prefix_tokens.size(-1)
 
-        suffix_chunk_size = self.chunk_size - prefix_len
+        suffix_chunk_size = self.chunk_size - prefix_len # 接頭辞の分は除く (例えば512 - prefix)
         chunk_input_ids_all = []
         chunk_attention_mask_all = []
 
-        suffix = f"{source}</s>"
-        suffix_total_size = self.max_num_chunks * suffix_chunk_size
+        suffix = f"{source}</s>" # ターゲット文とトークンを接尾辞に指定
+        suffix_total_size = self.max_num_chunks * suffix_chunk_size # 接尾辞(本文部)の合計トークン長は「セグメント数 × セグメント長」
         input_ids = self.tokenizer(
             suffix,
             add_special_tokens=False,
             truncation=True,
-            max_length=suffix_total_size,
+            max_length=suffix_total_size, # 例えば(512 - prefix) * 32 (=>prefix含めて16384)
         )['input_ids']
 
+        # セグメントをoverlapさせる場合の処理 (最大セグメント数は2以上)
         if self.stride and self.max_num_chunks > 1:
             use_offset_list = [False, True]
         else:
             use_offset_list = [False]
         for use_offset in use_offset_list:
             if use_offset:
-                offset = math.floor(suffix_chunk_size / 2)
-                num_chunks = self.max_num_chunks - 1
-                suffix_tokens = input_ids[offset: offset + num_chunks * suffix_chunk_size]
+                offset = math.floor(suffix_chunk_size / 2) # セグメント長の半分がoffset (例えば(512-prefix)/2)
+                num_chunks = self.max_num_chunks - 1 # 例えば32-1
+                suffix_tokens = input_ids[offset: offset + num_chunks * suffix_chunk_size] #input_ids[offset]
             else:
                 suffix_tokens = input_ids[:suffix_total_size]
                 num_chunks = self.max_num_chunks
@@ -210,7 +211,7 @@ class ChunkTokenizer:
             prefix_chunks = prefix_tokens.expand(suffix_chunks.size(0), -1)
             prefix_attention = torch.ones_like(prefix_chunks)
 
-            chunk_input_ids = torch.cat((prefix_chunks, suffix_chunks), dim=1)
+            chunk_input_ids = torch.cat((prefix_chunks, suffix_chunks), dim=1) # 1つのセグメントの入力
             chunk_attention_mask = torch.cat((prefix_attention, suffix_attention), dim=1)
 
             chunk_input_ids_all.append(chunk_input_ids)
