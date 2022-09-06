@@ -755,7 +755,7 @@ def main():
                     prediction_path = os.path.join(training_args.output_dir, "test.predictions")
                 # print('Writing prediction file to', output_prediction_file)
                 with open(prediction_path, "w") as writer:
-                    writer.write("\n***\n".join(predictions))
+                    writer.write("\n".join(predictions))
 
     kwargs = {"finetuned_from": model_args.model_name_or_path, "tasks": "summarization"}
     if data_args.dataset_name is not None:
