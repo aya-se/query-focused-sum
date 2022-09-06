@@ -561,14 +561,12 @@ def main():
         padding = "max_length" if data_args.pad_to_max_length else False
 
         def preprocess_function(examples):
-            inputs = examples[text_column]
-            targets = examples[summary_column]
-            inputs = [prefix + inp for inp in inputs]
+            inputs = [f"<s>{query}</s>{source}</s>" for query, source in zip(examples["query"], examples["source"])]
             model_inputs = tokenizer(inputs, max_length=data_args.max_source_length, padding=padding, truncation=True)
 
             # Setup the tokenizer for targets
             with tokenizer.as_target_tokenizer():
-                labels = tokenizer(targets, max_length=max_target_length, padding=padding, truncation=True)
+                labels = tokenizer(examples["target"], max_length=max_target_length, padding=padding, truncation=True)
 
             # If we are padding here, replace all tokenizer.pad_token_id in the labels by -100 when we want to ignore
             # padding in the loss.
@@ -757,7 +755,7 @@ def main():
                     prediction_path = os.path.join(training_args.output_dir, "test.predictions")
                 # print('Writing prediction file to', output_prediction_file)
                 with open(prediction_path, "w") as writer:
-                    writer.write("\n".join(predictions))
+                    writer.write("\n***\n".join(predictions))
 
     kwargs = {"finetuned_from": model_args.model_name_or_path, "tasks": "summarization"}
     if data_args.dataset_name is not None:
