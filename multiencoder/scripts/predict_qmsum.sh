@@ -11,7 +11,7 @@ do
   --test_file data/${DATA}/${SPLIT}.json \
   --do_predict \
   --model_name_or_path output/${NAME}/selected_checkpoint \
-  --output_dir predicts/${OUTPUT_DIR} \
+  --output_dir ${OUTPUT_DIR} \
   --prediction_path ${OUTPUT_DIR}/predictions.txt \
   --max_source_length 1024 \
   --generation_max_len 256 \
