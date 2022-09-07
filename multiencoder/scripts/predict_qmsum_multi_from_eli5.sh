@@ -1,17 +1,18 @@
 NAME=qmsum_multi_from_eli5
 DATA=qmsum
-OUTPUT_DIR=output/${NAME}/selected_checkpoint
 
 for SPLIT in \
   "val" \
   "test"
 do
+  OUTPUT_DIR=predicts/${NAME}/${SPLIT}
+
   python -u train.py \
   --test_file data/${DATA}/${SPLIT}.json \
   --do_predict \
-  --model_name_or_path ${OUTPUT_DIR} \
-  --output_dir ${OUTPUT_DIR} \
-  --prediction_path ${OUTPUT_DIR}/predictions.${SPLIT} \
+  --model_name_or_path output/${NAME}/selected_checkpoint \
+  --output_dir predicts/${OUTPUT_DIR} \
+  --prediction_path ${OUTPUT_DIR}/predictions.txt \
   --max_source_length 512 \
   --generation_max_len 256 \
   --val_max_target_length 256 \
