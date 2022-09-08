@@ -1,5 +1,5 @@
-NAME=qmsum_from_eli5
-DATA=qmsum
+NAME=eli5_from_qmsum
+DATA=eli5
 
 python -u train.py \
 --train_file data/${DATA}/train.json \
@@ -8,7 +8,7 @@ python -u train.py \
 --do_eval \
 --learning_rate 0.000005 \
 --gradient_checkpointing \
---model_name_or_path output/eli5/selected_checkpoint \
+--model_name_or_path output/qmsum/selected_checkpoint \
 --metric_for_best_model eval_mean_rouge \
 --output_dir output/${NAME} \
 --per_device_train_batch_size 1 \

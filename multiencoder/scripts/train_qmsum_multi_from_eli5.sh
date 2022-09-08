@@ -1,4 +1,4 @@
-NAME=qmsum_multi
+NAME=qmsum_multi_from_eli5
 DATA=qmsum
 
 python -u train.py \

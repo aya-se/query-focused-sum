@@ -1,0 +1,13 @@
+{
+    "predict_eval_mean_rouge": 28.0684,
+    "predict_gen_len": 85.7046,
+    "predict_loss": 2.535242795944214,
+    "predict_rouge1": 37.5701,
+    "predict_rouge2": 13.3626,
+    "predict_rougeL": 24.5301,
+    "predict_rougeLsum": 33.2723,
+    "predict_runtime": 608.2167,
+    "predict_samples": 281,
+    "predict_samples_per_second": 0.462,
+    "predict_steps_per_second": 0.462
+}

@@ -1,4 +1,4 @@
-NAME=qmsum_from_eli5
+NAME=qmsum_from_wikisum
 DATA=qmsum
 
 python -u train.py \
@@ -8,7 +8,7 @@ python -u train.py \
 --do_eval \
 --learning_rate 0.000005 \
 --gradient_checkpointing \
---model_name_or_path output/eli5/selected_checkpoint \
+--model_name_or_path output/bart-wikisum \
 --metric_for_best_model eval_mean_rouge \
 --output_dir output/${NAME} \
 --per_device_train_batch_size 1 \
