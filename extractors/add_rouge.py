@@ -43,33 +43,31 @@ if __name__ == "__main__":
                     chunks = [x.replace("<pad>", "").replace("<s>", "").strip() for x in tokens]
                     id2meetingsrc[meeting_data['meeting_id']] = chunks
                 else:
-                    id2meetingsrc[meeting_data['meeting_id']] = meeting_data['meeting_transcripts']
+                    id2meetingsrc[meeting_data['meeting_id']] = meeting_data['meeting_transcripts'] # ソース文の配列を取得
 
         fname = os.path.join(os.path.dirname( __file__ ), "..", "data", f"{split}.jsonl")
         if do_chunks:
-            fname_out = os.path.join(os.path.dirname( __file__ ), \
-                "..", "data", f"{split}.rouge.256.jsonl")
+            fname_out = os.path.join(os.path.dirname( __file__ ), "..", "data", f"{split}.rouge.256.jsonl")
         else:
-            fname_out = os.path.join(os.path.dirname( __file__ ), \
-                "..", "data", f"{split}.rouge.jsonl")
+            fname_out = os.path.join(os.path.dirname( __file__ ), "..", "data", f"{split}.rouge.jsonl") # 書き込み先の指定
         totals = {"train": 1257, "val": 272, "test": 281}
         with open(fname) as f, open(fname_out, "w") as out:
             for line in tqdm(f, total=totals[split]):
                 data = json.loads(line)
-                meeting_utterances_final = id2meetingsrc[data['meeting_id']]
+                meeting_utterances_final = id2meetingsrc[data['meeting_id']] # ソース文の配列を取得
                 target = data['answer']
                 query = data['query']
 
                 references = [target] * len(meeting_utterances_final)
 
-                metric.add_batch(predictions=meeting_utterances_final, references=references)
+                metric.add_batch(predictions=meeting_utterances_final, references=references) # ソース文のパッセージと参照要約の組を追加
                 score = metric.compute(use_agregator=False)
 
-                rouge_1 = score['rouge1']
+                rouge_1 = score['rouge1'] # ソース文のパッセージと参照要約のROUGE-1スコアを計算
                 scores = [x.fmeasure for x in rouge_1]
                 if do_chunks:
                     data["chunks"] = meeting_utterances_final
-                data["utt_rouge_f1"] = scores
+                data["utt_rouge_f1"] = scores # ROUGE-1のスコア配列をカラムに格納
 
                 json.dump(data, out)
                 out.write("\n")

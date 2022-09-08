@@ -22,27 +22,23 @@ if __name__ == "__main__":
     for split in ["train", "val", "test"]:
         id2meetingsrc = {}
         if do_chunks:
-            fname = os.path.join(os.path.dirname( __file__ ), \
-                 "data", f'{split}.rouge.256.jsonl')
+            fname = os.path.join(os.path.dirname( __file__ ), "data", f'{split}.rouge.256.jsonl')
         else:
-            fname = os.path.join(os.path.dirname( __file__ ), "..", \
-                "data", f'{split}.rouge.jsonl')
+            fname = os.path.join(os.path.dirname( __file__ ), "..", "data", f'{split}-meetings.jsonl') # 修正：元のソース文配列を参照
         with open(fname) as f:
             for line in f:
                 meeting_data = json.loads(line)
                 if do_chunks:
                     id2meetingsrc[meeting_data['meeting_id']] = meeting_data['chunks']
                 else:
-                    id2meetingsrc[meeting_data['meeting_id']] = meeting_data['meeting_transcripts']
+                    id2meetingsrc[meeting_data['meeting_id']] = meeting_data['meeting_transcripts'] # ソース文の配列を取得
 
         if do_chunks:
             fname = os.path.join(os.path.dirname( __file__ ), "data", f'{split}.rouge.256.jsonl')
-            fname_out_csv = os.path.join(os.path.dirname( __file__ ), \
-                "..", "data", f"{split}.relreg.256.csv")
+            fname_out_csv = os.path.join(os.path.dirname( __file__ ), "..", "data", f"{split}.relreg.256.csv")
         else:
-            fname = os.path.join(os.path.dirname( __file__ ), "..", "data", f"{split}.jsonl")
-            fname_out_csv = os.path.join(os.path.dirname( __file__ ), \
-                "..", "data", f"{split}.relreg.csv")
+            fname = os.path.join(os.path.dirname( __file__ ), "..", "data", f"{split}.rouge.jsonl") # 修正：rougeファイルを参照
+            fname_out_csv = os.path.join(os.path.dirname( __file__ ), "..", "data", f"{split}.relreg.csv")
 
         totals = {"train": 1257, "val": 272, "test": 281}
         with open(fname) as f, open(fname_out_csv, "w") as outr:
@@ -51,7 +47,7 @@ if __name__ == "__main__":
             for line in tqdm(f, total=totals[split]):
                 data = json.loads(line)
 
-                meeting_utterances = id2meetingsrc[data['meeting_id']]
+                meeting_utterances = id2meetingsrc[data['meeting_id']] 
                 target = data['answer']
                 query = data['query']
                 scores = data["utt_rouge_f1"]

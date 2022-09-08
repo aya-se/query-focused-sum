@@ -1,14 +1,21 @@
+#$ -l rt_AG.small=1
+#$ -l h_rt=24:00:00
+#$ -o logs/relreg.out
+#$ -j y
+#$ -cwd
 
-$CHUNKS=$1
-$OUTPUT_DIR=$2
+source ~/.bashrc
+conda activate qfsum
 
+CHUNKS=0
+OUTPUT_DIR=output-relreg-utt
 
 # Add chunk/utterance-level ROUGE and convert data to format required for RelReg training and inference; 0 for utterance-level data.
-python add_rouge.py $CHUNKS
-python prep_data_relreg.py $CHUNKS
+# python add_rouge.py ${CHUNKS}
+# python prep_data_relreg.py ${CHUNKS}
 
 # Train RelReg on utterance-level input
-CUDA_VISIBLE_DEVICES=0 python transformers/examples/pytorch/text-classification/run_glue.py \
+python transformers/examples/pytorch/text-classification/run_glue.py \
   --model_name_or_path google/electra-large-discriminator \
   --train_file ../data/train.relreg.csv \
   --validation_file ../data/val.relreg.csv \
@@ -26,7 +33,7 @@ CUDA_VISIBLE_DEVICES=0 python transformers/examples/pytorch/text-classification/
 # Run inference inference
 for split in 'train' 'val' 'test'
 do
-    CUDA_VISIBLE_DEVICES=0 python transformers/examples/pytorch/text-classification/run_glue.py \
+    python transformers/examples/pytorch/text-classification/run_glue.py \
     --model_name_or_path ./${OUTPUT_DIR} \
     --train_file ../data/train.relreg.csv \
     --validation_file ../data/val.relreg.csv \
@@ -41,4 +48,4 @@ do
 done
 
 # Collect predictions and process to format for seq2seq models; 0 signifies not using the semgneted input
-python postprocess_relreg.py $CHUNKS $OUTPUT_DIR
+python postprocess_relreg.py ${CHUNKS} ${OUTPUT_DIR}
